@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.ui.screens
+package com.hrdcoreee.lighty.ui.screens
 
 import android.content.Intent
 import android.net.Uri
@@ -14,8 +14,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.OpenInNew
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.LinkOff
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -36,8 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.hrdcoreee.lightytest.i18n.Language
-import com.hrdcoreee.lightytest.i18n.LocalStrings
+import com.hrdcoreee.lighty.i18n.Language
+import com.hrdcoreee.lighty.i18n.LocalStrings
 
 private const val GITHUB_URL = "https://github.com/swzxu/Lighty"
 
@@ -46,9 +48,11 @@ private const val GITHUB_URL = "https://github.com/swzxu/Lighty"
 fun SettingsScreen(
     language: Language,
     showAllDevices: Boolean,
+    boundDeviceName: String?,
     onBack: () -> Unit,
     onLanguageChange: (Language) -> Unit,
     onShowAllChange: (Boolean) -> Unit,
+    onUnbind: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val s = LocalStrings.current
@@ -66,7 +70,7 @@ fun SettingsScreen(
                 title = { Text(s.settingsTitle, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Rounded.ArrowBack, contentDescription = s.disconnectCd)
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = s.settingsCd)
                     }
                 }
             )
@@ -79,6 +83,34 @@ fun SettingsScreen(
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            if (boundDeviceName != null) {
+                SettingsSection(title = s.deviceSection) {
+                    Text(
+                        boundDeviceName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        s.unbindDesc,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    FilledTonalButton(
+                        onClick = onUnbind,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    ) {
+                        Icon(Icons.Rounded.LinkOff, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(s.unbind)
+                    }
+                }
+            }
+
             SettingsSection(title = s.languageSection) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     Language.entries.forEachIndexed { index, lang ->
@@ -126,7 +158,7 @@ fun SettingsScreen(
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL)))
                     }
                 ) {
-                    Icon(Icons.Rounded.OpenInNew, contentDescription = null)
+                    Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(s.openGithub)
                 }

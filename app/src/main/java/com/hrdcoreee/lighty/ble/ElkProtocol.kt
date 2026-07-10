@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.ble
+package com.hrdcoreee.lighty.ble
 
 import java.util.UUID
 

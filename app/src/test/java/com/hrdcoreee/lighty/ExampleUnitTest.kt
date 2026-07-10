@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest
+package com.hrdcoreee.lighty
 
 import org.junit.Test
 

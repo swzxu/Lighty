@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.ui.components
+package com.hrdcoreee.lighty.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures

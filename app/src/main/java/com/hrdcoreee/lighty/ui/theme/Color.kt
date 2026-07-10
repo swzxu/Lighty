@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.ui.theme
+package com.hrdcoreee.lighty.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest
+package com.hrdcoreee.lighty
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
@@ -51,20 +51,20 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hrdcoreee.lightytest.ble.ConnectionState
-import com.hrdcoreee.lightytest.i18n.LocalStrings
-import com.hrdcoreee.lightytest.i18n.stringsFor
-import com.hrdcoreee.lightytest.ui.screens.ControlScreen
-import com.hrdcoreee.lightytest.ui.screens.ScanScreen
-import com.hrdcoreee.lightytest.ui.screens.SettingsScreen
-import com.hrdcoreee.lightytest.ui.theme.LightyTestTheme
+import com.hrdcoreee.lighty.ble.ConnectionState
+import com.hrdcoreee.lighty.i18n.LocalStrings
+import com.hrdcoreee.lighty.i18n.stringsFor
+import com.hrdcoreee.lighty.ui.screens.ControlScreen
+import com.hrdcoreee.lighty.ui.screens.ScanScreen
+import com.hrdcoreee.lighty.ui.screens.SettingsScreen
+import com.hrdcoreee.lighty.ui.theme.LightyTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            LightyTestTheme {
+            LightyTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -119,6 +119,7 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
 
         val connectionState by viewModel.connectionState.collectAsStateWithLifecycle()
         val connectedDevice by viewModel.connectedDevice.collectAsStateWithLifecycle()
+        val boundDevice by viewModel.boundDevice.collectAsStateWithLifecycle()
         val devices by viewModel.devices.collectAsStateWithLifecycle()
         val scanning by viewModel.scanning.collectAsStateWithLifecycle()
         val showAllDevices by viewModel.showAllDevices.collectAsStateWithLifecycle()
@@ -130,19 +131,22 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
 
         var showSettings by remember { mutableStateOf(false) }
 
-        LaunchedEffect(Unit) {
-            if (viewModel.isBluetoothEnabled()) viewModel.startScan()
+        // Only scan when no strip is bound; a bound strip auto-connects instead.
+        LaunchedEffect(boundDevice == null) {
+            if (boundDevice == null && viewModel.isBluetoothEnabled()) viewModel.startScan()
         }
 
+        // A failed manual connection is worth a toast; a bound strip shows "offline" instead.
         LaunchedEffect(connectionState) {
-            if (connectionState == ConnectionState.FAILED) {
+            if (connectionState == ConnectionState.FAILED && boundDevice == null) {
                 Toast.makeText(context, strings.connectFailed, Toast.LENGTH_SHORT).show()
             }
         }
 
-        val connected = connectionState == ConnectionState.CONNECTED && connectedDevice != null
+        val online = connectionState == ConnectionState.CONNECTED
+        val connecting = connectionState == ConnectionState.CONNECTING
         val screen = when {
-            connected -> Screen.CONTROL
+            boundDevice != null && !showSettings -> Screen.CONTROL
             showSettings -> Screen.SETTINGS
             else -> Screen.SCAN
         }
@@ -156,25 +160,32 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
         ) { target ->
             when (target) {
                 Screen.CONTROL -> ControlScreen(
-                    deviceName = connectedDevice?.name ?: connectedDevice?.address ?: strings.deviceFallback,
+                    deviceName = boundDevice?.name ?: boundDevice?.address ?: strings.deviceFallback,
+                    online = online,
+                    connecting = connecting,
                     isOn = isOn,
                     color = color,
                     hue = hue,
                     saturation = saturation,
                     value = value,
-                    onBack = { viewModel.disconnect() },
                     onSetPower = viewModel::setPower,
                     onHsvChange = viewModel::onHsvChange,
                     onBrightnessChange = viewModel::onBrightnessChange,
                     onPreset = viewModel::applyColor,
+                    onOpenSettings = { showSettings = true },
                 )
 
                 Screen.SETTINGS -> SettingsScreen(
                     language = language,
                     showAllDevices = showAllDevices,
+                    boundDeviceName = boundDevice?.name ?: boundDevice?.address,
                     onBack = { showSettings = false },
                     onLanguageChange = viewModel::setLanguage,
                     onShowAllChange = viewModel::setShowAllDevices,
+                    onUnbind = {
+                        showSettings = false
+                        viewModel.unbind()
+                    },
                 )
 
                 Screen.SCAN -> ScanScreen(
@@ -184,7 +195,7 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
                     connectionState = connectionState,
                     connectingAddress = connectedDevice?.address,
                     onToggleScan = viewModel::toggleScan,
-                    onConnect = viewModel::connect,
+                    onConnect = viewModel::bindAndConnect,
                     onEnableBluetooth = {
                         enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
                     },

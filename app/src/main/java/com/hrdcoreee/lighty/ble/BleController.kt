@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.ble
+package com.hrdcoreee.lighty.ble
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
@@ -222,6 +222,11 @@ class BleController(context: Context) {
     /** Enqueue a 9-byte ELK frame. Safe to spam; writes are paced by the stack. */
     fun send(command: ByteArray) {
         writeQueue.trySend(command)
+    }
+
+    /** Lightweight liveness probe used while a device is bound. */
+    fun pingRssi() {
+        runCatching { gatt?.readRemoteRssi() }
     }
 
     private fun startWriteWorker() {

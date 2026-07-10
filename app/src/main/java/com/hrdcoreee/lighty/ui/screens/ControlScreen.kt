@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.ui.screens
+package com.hrdcoreee.lighty.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -21,8 +21,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.PowerSettingsNew
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,15 +38,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.hrdcoreee.lightytest.i18n.LocalStrings
-import com.hrdcoreee.lightytest.ui.components.HsvColorPicker
+import com.hrdcoreee.lighty.i18n.LocalStrings
+import com.hrdcoreee.lighty.ui.components.HsvColorPicker
 import kotlin.math.roundToInt
 
 private val PRESETS = listOf(
@@ -66,19 +69,29 @@ private val PRESETS = listOf(
 @Composable
 fun ControlScreen(
     deviceName: String,
+    online: Boolean,
+    connecting: Boolean,
     isOn: Boolean,
     color: Color,
     hue: Float,
     saturation: Float,
     value: Float,
-    onBack: () -> Unit,
     onSetPower: (Boolean) -> Unit,
     onHsvChange: (hue: Float, saturation: Float, value: Float) -> Unit,
     onBrightnessChange: (Float) -> Unit,
     onPreset: (Color) -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val s = LocalStrings.current
+    val statusText = when {
+        online -> s.connected
+        connecting -> s.connecting
+        else -> s.offline
+    }
+    val statusColor = if (online) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.error
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -92,15 +105,15 @@ fun ControlScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            s.connected,
+                            statusText,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
+                            color = statusColor
                         )
                     }
                 },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Rounded.ArrowBack, contentDescription = s.disconnectCd)
+                actions = {
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(Icons.Rounded.Settings, contentDescription = s.settingsCd)
                     }
                 }
             )
@@ -113,29 +126,81 @@ fun ControlScreen(
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            PowerHero(isOn = isOn, color = color, onToggle = { onSetPower(!isOn) })
+            if (!online) OfflineCard(connecting = connecting)
 
-            PowerSwitchRow(isOn = isOn, onSetPower = onSetPower)
+            Box {
+                Column(
+                    modifier = Modifier.alpha(if (online) 1f else 0.4f),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    PowerHero(isOn = isOn, color = color, onToggle = { onSetPower(!isOn) })
 
-            SectionCard(title = s.brightness) {
-                BrightnessSlider(value = value, onBrightnessChange = onBrightnessChange)
-            }
+                    PowerSwitchRow(isOn = isOn, onSetPower = onSetPower)
 
-            SectionCard(title = s.quickColors) {
-                PresetGrid(onPreset = onPreset)
-            }
+                    SectionCard(title = s.brightness) {
+                        BrightnessSlider(value = value, onBrightnessChange = onBrightnessChange)
+                    }
 
-            SectionCard(title = s.customColor) {
-                HsvColorPicker(
-                    hue = hue,
-                    saturation = saturation,
-                    value = value,
-                    onColorChange = onHsvChange,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    SectionCard(title = s.quickColors) {
+                        PresetGrid(onPreset = onPreset)
+                    }
+
+                    SectionCard(title = s.customColor) {
+                        HsvColorPicker(
+                            hue = hue,
+                            saturation = saturation,
+                            value = value,
+                            onColorChange = onHsvChange,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                // When offline, swallow all touches so controls can't be used.
+                if (!online) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .pointerInput(Unit) {
+                                awaitPointerEventScope {
+                                    while (true) {
+                                        awaitPointerEvent().changes.forEach { it.consume() }
+                                    }
+                                }
+                            }
+                    )
+                }
             }
 
             Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun OfflineCard(connecting: Boolean) {
+    val s = LocalStrings.current
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Rounded.CloudOff, contentDescription = null)
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(
+                    if (connecting) s.connecting else s.offline,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(s.offlineHint, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

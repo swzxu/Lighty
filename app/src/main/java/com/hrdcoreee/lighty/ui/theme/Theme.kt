@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.ui.theme
+package com.hrdcoreee.lighty.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -67,7 +67,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun LightyTestTheme(
+fun LightyTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Off by default so the curated brand palette shows consistently everywhere.
     dynamicColor: Boolean = false,

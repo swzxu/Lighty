@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.ui.screens
+package com.hrdcoreee.lighty.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
@@ -54,9 +54,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.hrdcoreee.lightytest.ble.ConnectionState
-import com.hrdcoreee.lightytest.ble.ScannedDevice
-import com.hrdcoreee.lightytest.i18n.LocalStrings
+import com.hrdcoreee.lighty.ble.ConnectionState
+import com.hrdcoreee.lighty.ble.ScannedDevice
+import com.hrdcoreee.lighty.i18n.LocalStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.hrdcoreee.lightytest"
+    namespace = "com.hrdcoreee.lighty"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.hrdcoreee.lightytest"
+        applicationId = "com.hrdcoreee.lighty"
         minSdk = 25
         targetSdk = 36
         versionCode = 1

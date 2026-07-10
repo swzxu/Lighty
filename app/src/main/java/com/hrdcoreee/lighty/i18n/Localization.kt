@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.i18n
+package com.hrdcoreee.lighty.i18n
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import java.util.Locale
@@ -51,6 +51,9 @@ data class Strings(
     val offLabel: String,
     val connectFailed: String,
     val deviceFallback: String,
+    val offline: String,
+    val connecting: String,
+    val offlineHint: String,
     // Permission screen
     val permTitle: String,
     val permMessage: String,
@@ -64,6 +67,9 @@ data class Strings(
     val versionLabel: String,
     val openGithub: String,
     val aboutDescription: String,
+    val deviceSection: String,
+    val unbind: String,
+    val unbindDesc: String,
 )
 
 val EnStrings = Strings(
@@ -93,6 +99,9 @@ val EnStrings = Strings(
     offLabel = "OFF",
     connectFailed = "Failed to connect",
     deviceFallback = "Device",
+    offline = "Offline",
+    connecting = "Connecting…",
+    offlineHint = "The strip is unavailable. Check its power and that it is nearby.",
     permTitle = "Bluetooth access needed",
     permMessage = "To find your light strip and control it, the app needs permission to scan for nearby devices.",
     allow = "Allow",
@@ -104,6 +113,9 @@ val EnStrings = Strings(
     versionLabel = "Version",
     openGithub = "Open on GitHub",
     aboutDescription = "Bluetooth LED strip control",
+    deviceSection = "Strip",
+    unbind = "Unbind",
+    unbindDesc = "Unbind and choose another strip",
 )
 
 val RuStrings = Strings(
@@ -133,6 +145,9 @@ val RuStrings = Strings(
     offLabel = "ВЫКЛ",
     connectFailed = "Не удалось подключиться",
     deviceFallback = "Устройство",
+    offline = "Не в сети",
+    connecting = "Подключение…",
+    offlineHint = "Лента недоступна. Проверьте питание и что она рядом.",
     permTitle = "Нужен доступ к Bluetooth",
     permMessage = "Чтобы найти вашу подсветку и управлять ей, приложению нужно разрешение на поиск устройств поблизости.",
     allow = "Разрешить",
@@ -144,6 +159,9 @@ val RuStrings = Strings(
     versionLabel = "Версия",
     openGithub = "Открыть на GitHub",
     aboutDescription = "Управление светодиодной подсветкой по Bluetooth",
+    deviceSection = "Лента",
+    unbind = "Отвязать",
+    unbindDesc = "Отвязать и выбрать другую ленту",
 )
 
 fun stringsFor(language: Language): Strings = when (language) {

@@ -1,4 +1,4 @@
-package com.hrdcoreee.lightytest.ble
+package com.hrdcoreee.lighty.ble
 
 /** A device discovered during a BLE scan. */
 data class ScannedDevice(
@@ -25,4 +25,13 @@ enum class ConnectionState {
     CONNECTING,
     CONNECTED,
     FAILED
+}
+
+/** A strip the user has bound; the app auto-connects to it on launch. */
+data class BoundDevice(
+    val address: String,
+    val name: String?
+) {
+    fun toScannedDevice(): ScannedDevice =
+        ScannedDevice(address = address, name = name, rssi = 0, isElk = true)
 }
