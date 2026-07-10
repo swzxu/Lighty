@@ -70,6 +70,11 @@ data class Strings(
     val deviceSection: String,
     val unbind: String,
     val unbindDesc: String,
+    val themeSection: String,
+    val themeAuto: String,
+    val themeLight: String,
+    val themeDark: String,
+    val themeAmoled: String,
 )
 
 val EnStrings = Strings(
@@ -116,6 +121,11 @@ val EnStrings = Strings(
     deviceSection = "Strip",
     unbind = "Unbind",
     unbindDesc = "Unbind and choose another strip",
+    themeSection = "Theme",
+    themeAuto = "Automatic",
+    themeLight = "Light",
+    themeDark = "Dark",
+    themeAmoled = "Full AMOLED",
 )
 
 val RuStrings = Strings(
@@ -162,6 +172,11 @@ val RuStrings = Strings(
     deviceSection = "Лента",
     unbind = "Отвязать",
     unbindDesc = "Отвязать и выбрать другую ленту",
+    themeSection = "Тема",
+    themeAuto = "Автоматически",
+    themeLight = "Светлая",
+    themeDark = "Тёмная",
+    themeAmoled = "Full AMOLED",
 )
 
 fun stringsFor(language: Language): Strings = when (language) {

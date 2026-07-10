@@ -8,7 +8,11 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+
+/** User-selectable app appearance. */
+enum class ThemeMode { AUTO, LIGHT, DARK, AMOLED }
 
 private val DarkColorScheme = darkColorScheme(
     primary = DarkPrimary,
@@ -66,14 +70,34 @@ private val LightColorScheme = lightColorScheme(
     onError = LightOnError,
 )
 
+// Pure-black variant of the dark scheme for AMOLED displays.
+private val AmoledColorScheme = DarkColorScheme.copy(
+    background = Color(0xFF000000),
+    surface = Color(0xFF000000),
+    surfaceVariant = Color(0xFF161616),
+    surfaceContainerLowest = Color(0xFF000000),
+    surfaceContainerLow = Color(0xFF080808),
+    surfaceContainer = Color(0xFF0D0D0D),
+    surfaceContainerHigh = Color(0xFF161616),
+    surfaceContainerHighest = Color(0xFF1F1F1F),
+)
+
 @Composable
 fun LightyTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeMode = ThemeMode.AUTO,
     // Off by default so the curated brand palette shows consistently everywhere.
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val darkTheme = when (themeMode) {
+        ThemeMode.AUTO -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK, ThemeMode.AMOLED -> true
+    }
+
     val colorScheme = when {
+        themeMode == ThemeMode.AMOLED -> AmoledColorScheme
+
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)

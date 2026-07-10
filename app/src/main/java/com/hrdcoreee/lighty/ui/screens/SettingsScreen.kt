@@ -2,6 +2,7 @@ package com.hrdcoreee.lighty.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hrdcoreee.lighty.i18n.Language
 import com.hrdcoreee.lighty.i18n.LocalStrings
+import com.hrdcoreee.lighty.ui.theme.ThemeMode
 
 private const val GITHUB_URL = "https://github.com/swzxu/Lighty"
 
@@ -47,10 +50,12 @@ private const val GITHUB_URL = "https://github.com/swzxu/Lighty"
 @Composable
 fun SettingsScreen(
     language: Language,
+    themeMode: ThemeMode,
     showAllDevices: Boolean,
     boundDeviceName: String?,
     onBack: () -> Unit,
     onLanguageChange: (Language) -> Unit,
+    onThemeChange: (ThemeMode) -> Unit,
     onShowAllChange: (Boolean) -> Unit,
     onUnbind: () -> Unit,
     modifier: Modifier = Modifier,
@@ -125,6 +130,21 @@ fun SettingsScreen(
                 }
             }
 
+            SettingsSection(title = s.themeSection) {
+                ThemeMode.entries.forEach { mode ->
+                    ThemeOptionRow(
+                        label = when (mode) {
+                            ThemeMode.AUTO -> s.themeAuto
+                            ThemeMode.LIGHT -> s.themeLight
+                            ThemeMode.DARK -> s.themeDark
+                            ThemeMode.AMOLED -> s.themeAmoled
+                        },
+                        selected = themeMode == mode,
+                        onClick = { onThemeChange(mode) }
+                    )
+                }
+            }
+
             SettingsSection(title = s.showAllDevices) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -164,6 +184,21 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ThemeOptionRow(label: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(selected = selected, onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Spacer(Modifier.width(12.dp))
+        Text(label, style = MaterialTheme.typography.bodyLarge)
     }
 }
 

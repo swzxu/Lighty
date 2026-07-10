@@ -77,7 +77,8 @@ fun ControlScreen(
     saturation: Float,
     value: Float,
     onSetPower: (Boolean) -> Unit,
-    onHsvChange: (hue: Float, saturation: Float, value: Float) -> Unit,
+    onHueChange: (Float) -> Unit,
+    onSaturationValueChange: (saturation: Float, value: Float) -> Unit,
     onBrightnessChange: (Float) -> Unit,
     onPreset: (Color) -> Unit,
     onOpenSettings: () -> Unit,
@@ -150,7 +151,8 @@ fun ControlScreen(
                             hue = hue,
                             saturation = saturation,
                             value = value,
-                            onColorChange = onHsvChange,
+                            onHueChange = onHueChange,
+                            onSaturationValueChange = onSaturationValueChange,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

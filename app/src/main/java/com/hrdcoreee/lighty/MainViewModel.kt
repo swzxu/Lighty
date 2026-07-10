@@ -12,6 +12,7 @@ import com.hrdcoreee.lighty.ble.ConnectionState
 import com.hrdcoreee.lighty.ble.ElkProtocol
 import com.hrdcoreee.lighty.ble.ScannedDevice
 import com.hrdcoreee.lighty.i18n.Language
+import com.hrdcoreee.lighty.ui.theme.ThemeMode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -41,6 +42,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _showAllDevices = MutableStateFlow(prefs.getBoolean(KEY_SHOW_ALL, false))
     val showAllDevices: StateFlow<Boolean> = _showAllDevices.asStateFlow()
+
+    private val _themeMode = MutableStateFlow(readThemeMode())
+    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
     // ---- BLE state --------------------------------------------------------
 
@@ -109,6 +113,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         prefs.edit().putBoolean(KEY_SHOW_ALL, show).apply()
         ble.setShowAllDevices(show)
     }
+
+    fun setThemeMode(mode: ThemeMode) {
+        _themeMode.value = mode
+        prefs.edit().putString(KEY_THEME, mode.name).apply()
+    }
+
+    private fun readThemeMode(): ThemeMode =
+        runCatching { ThemeMode.valueOf(prefs.getString(KEY_THEME, null) ?: "") }
+            .getOrDefault(ThemeMode.AUTO)
 
     // ---- Scanning ---------------------------------------------------------
 
@@ -181,13 +194,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun onBrightnessChange(brightness: Float) =
         updateHsv(value = brightness.coerceIn(0f, 1f))
 
-    fun onHsvChange(hue: Float, saturation: Float, value: Float) =
-        updateHsv(
-            hue = hue.coerceIn(0f, 360f),
-            saturation = saturation.coerceIn(0f, 1f),
-            value = value.coerceIn(0f, 1f)
-        )
-
     fun applyColor(color: Color) {
         val hsv = FloatArray(3)
         android.graphics.Color.colorToHSV(color.toArgb(), hsv)
@@ -257,6 +263,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         private const val PING_INTERVAL_MS = 10_000L
         private const val KEY_LANGUAGE = "language"
         private const val KEY_SHOW_ALL = "show_all_devices"
+        private const val KEY_THEME = "theme_mode"
         private const val KEY_POWER = "power"
         private const val KEY_HUE = "hue"
         private const val KEY_SAT = "saturation"

@@ -64,12 +64,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            LightyTheme {
+            val viewModel: MainViewModel = viewModel()
+            val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+            LightyTheme(themeMode = themeMode) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LightyApp()
+                    LightyApp(viewModel)
                 }
             }
         }
@@ -123,6 +125,7 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
         val devices by viewModel.devices.collectAsStateWithLifecycle()
         val scanning by viewModel.scanning.collectAsStateWithLifecycle()
         val showAllDevices by viewModel.showAllDevices.collectAsStateWithLifecycle()
+        val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
         val isOn by viewModel.isOn.collectAsStateWithLifecycle()
         val color by viewModel.color.collectAsStateWithLifecycle()
         val hue by viewModel.hue.collectAsStateWithLifecycle()
@@ -169,7 +172,8 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
                     saturation = saturation,
                     value = value,
                     onSetPower = viewModel::setPower,
-                    onHsvChange = viewModel::onHsvChange,
+                    onHueChange = viewModel::onHueChange,
+                    onSaturationValueChange = viewModel::onSaturationValueChange,
                     onBrightnessChange = viewModel::onBrightnessChange,
                     onPreset = viewModel::applyColor,
                     onOpenSettings = { showSettings = true },
@@ -177,10 +181,12 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
 
                 Screen.SETTINGS -> SettingsScreen(
                     language = language,
+                    themeMode = themeMode,
                     showAllDevices = showAllDevices,
                     boundDeviceName = boundDevice?.name ?: boundDevice?.address,
                     onBack = { showSettings = false },
                     onLanguageChange = viewModel::setLanguage,
+                    onThemeChange = viewModel::setThemeMode,
                     onShowAllChange = viewModel::setShowAllDevices,
                     onUnbind = {
                         showSettings = false
