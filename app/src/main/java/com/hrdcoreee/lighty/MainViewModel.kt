@@ -13,12 +13,16 @@ import com.hrdcoreee.lighty.ble.ElkProtocol
 import com.hrdcoreee.lighty.ble.ScannedDevice
 import com.hrdcoreee.lighty.i18n.Language
 import com.hrdcoreee.lighty.ui.theme.ThemeMode
+import com.hrdcoreee.lighty.update.UpdateEvent
+import com.hrdcoreee.lighty.update.UpdateInfo
+import com.hrdcoreee.lighty.update.UpdateManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -45,6 +49,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _themeMode = MutableStateFlow(readThemeMode())
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
+    // ---- OTA updates ------------------------------------------------------
+
+    private val updateManager = UpdateManager(app)
+
+    private val _updateInfo = MutableStateFlow<UpdateInfo?>(null)
+    val updateInfo: StateFlow<UpdateInfo?> = _updateInfo.asStateFlow()
+
+    private val _checkingUpdate = MutableStateFlow(false)
+    val checkingUpdate: StateFlow<Boolean> = _checkingUpdate.asStateFlow()
+
+    /** null = not downloading; 0..100 during an in-progress download. */
+    private val _downloadProgress = MutableStateFlow<Int?>(null)
+    val downloadProgress: StateFlow<Int?> = _downloadProgress.asStateFlow()
+
+    private val _updateEvents = Channel<UpdateEvent>(Channel.BUFFERED)
+    val updateEvents = _updateEvents.receiveAsFlow()
 
     // ---- BLE state --------------------------------------------------------
 
@@ -99,9 +120,60 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
         // If a strip is already bound, start keeping it alive immediately.
         if (_boundDevice.value != null) startBoundLoop()
+
+        // Quietly look for a newer release on launch.
+        checkForUpdates(silent = true)
     }
 
     fun isBluetoothEnabled(): Boolean = ble.isBluetoothEnabled()
+
+    // ---- OTA updates ------------------------------------------------------
+
+    fun checkForUpdates(silent: Boolean = false) {
+        if (_checkingUpdate.value) return
+        viewModelScope.launch {
+            _checkingUpdate.value = true
+            val result = runCatching { updateManager.check() }
+            _checkingUpdate.value = false
+            result
+                .onSuccess { info ->
+                    when {
+                        info != null -> _updateInfo.value = info
+                        !silent -> _updateEvents.trySend(UpdateEvent.UP_TO_DATE)
+                    }
+                }
+                .onFailure { if (!silent) _updateEvents.trySend(UpdateEvent.CHECK_FAILED) }
+        }
+    }
+
+    fun dismissUpdate() {
+        _updateInfo.value = null
+    }
+
+    fun downloadAndInstallUpdate() {
+        val info = _updateInfo.value ?: return
+        val apkUrl = info.apkUrl
+        if (apkUrl == null) {
+            // No APK asset attached — fall back to the release page.
+            updateManager.openPage(info.pageUrl)
+            _updateInfo.value = null
+            return
+        }
+        if (_downloadProgress.value != null) return
+        viewModelScope.launch {
+            _downloadProgress.value = 0
+            val file = updateManager.downloadApk(apkUrl) { progress ->
+                _downloadProgress.value = progress
+            }
+            _downloadProgress.value = null
+            if (file != null) {
+                _updateInfo.value = null
+                updateManager.installApk(file)
+            } else {
+                _updateEvents.trySend(UpdateEvent.DOWNLOAD_FAILED)
+            }
+        }
+    }
 
     fun setLanguage(language: Language) {
         _language.value = language

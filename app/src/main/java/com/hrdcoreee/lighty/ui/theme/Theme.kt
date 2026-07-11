@@ -7,9 +7,15 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import android.app.Activity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 /** User-selectable app appearance. */
 enum class ThemeMode { AUTO, LIGHT, DARK, AMOLED }
@@ -105,6 +111,23 @@ fun LightyTheme(
 
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
+    }
+
+    // Keep the system bars (status bar) in sync with the active scheme so the
+    // icon contrast and background follow theme switches at runtime, not just
+    // the initial edge-to-edge call in onCreate.
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        DisposableEffect(colorScheme) {
+            val window = (view.context as Activity).window
+            // Paint the status-bar background with the surface color so it blends
+            // into the app instead of staying the system default.
+            window.statusBarColor = colorScheme.surface.toArgb()
+            // Light content (dark icons) on light surfaces, dark content otherwise.
+            WindowCompat.getInsetsController(window, view)
+                .isAppearanceLightStatusBars = colorScheme.surface.luminance() > 0.5f
+            onDispose {}
+        }
     }
 
     MaterialTheme(

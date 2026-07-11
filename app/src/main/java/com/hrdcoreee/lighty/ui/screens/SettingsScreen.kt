@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.LinkOff
+import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -58,6 +61,8 @@ fun SettingsScreen(
     onThemeChange: (ThemeMode) -> Unit,
     onShowAllChange: (Boolean) -> Unit,
     onUnbind: () -> Unit,
+    checkingUpdate: Boolean,
+    onCheckUpdates: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val s = LocalStrings.current
@@ -65,7 +70,7 @@ fun SettingsScreen(
     val versionName = remember {
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
-        }.getOrNull() ?: "1.0"
+        }.getOrNull() ?: "1.1"
     }
 
     Scaffold(
@@ -155,6 +160,24 @@ fun SettingsScreen(
                     )
                     Spacer(Modifier.width(16.dp))
                     Switch(checked = showAllDevices, onCheckedChange = onShowAllChange)
+                }
+            }
+
+            SettingsSection(title = s.updatesSection) {
+                FilledTonalButton(
+                    onClick = onCheckUpdates,
+                    enabled = !checkingUpdate
+                ) {
+                    if (checkingUpdate) {
+                        CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    } else {
+                        Icon(Icons.Rounded.SystemUpdate, contentDescription = null)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(s.checkUpdates)
                 }
             }
 

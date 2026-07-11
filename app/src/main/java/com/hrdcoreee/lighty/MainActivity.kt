@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -52,6 +53,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hrdcoreee.lighty.ble.ConnectionState
+import com.hrdcoreee.lighty.ui.components.UpdateDialog
+import com.hrdcoreee.lighty.update.UpdateEvent
 import com.hrdcoreee.lighty.i18n.LocalStrings
 import com.hrdcoreee.lighty.i18n.stringsFor
 import com.hrdcoreee.lighty.ui.screens.ControlScreen
@@ -131,8 +134,15 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
         val hue by viewModel.hue.collectAsStateWithLifecycle()
         val saturation by viewModel.saturation.collectAsStateWithLifecycle()
         val value by viewModel.value.collectAsStateWithLifecycle()
+        val updateInfo by viewModel.updateInfo.collectAsStateWithLifecycle()
+        val checkingUpdate by viewModel.checkingUpdate.collectAsStateWithLifecycle()
+        val downloadProgress by viewModel.downloadProgress.collectAsStateWithLifecycle()
 
         var showSettings by remember { mutableStateOf(false) }
+
+        // Intercept system Back when the Settings overlay is open so the
+        // user returns to the previous screen instead of exiting the app.
+        BackHandler(enabled = showSettings) { showSettings = false }
 
         // Only scan when no strip is bound; a bound strip auto-connects instead.
         LaunchedEffect(boundDevice == null) {
@@ -144,6 +154,28 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
             if (connectionState == ConnectionState.FAILED && boundDevice == null) {
                 Toast.makeText(context, strings.connectFailed, Toast.LENGTH_SHORT).show()
             }
+        }
+
+        // One-shot update outcomes (up-to-date / failures) as toasts.
+        LaunchedEffect(Unit) {
+            viewModel.updateEvents.collect { event ->
+                val message = when (event) {
+                    UpdateEvent.UP_TO_DATE -> strings.upToDate
+                    UpdateEvent.CHECK_FAILED -> strings.updateCheckFailed
+                    UpdateEvent.DOWNLOAD_FAILED -> strings.downloadFailed
+                }
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        updateInfo?.let { info ->
+            UpdateDialog(
+                versionName = info.versionName,
+                releaseNotes = info.releaseNotes,
+                downloadProgress = downloadProgress,
+                onUpdate = viewModel::downloadAndInstallUpdate,
+                onDismiss = viewModel::dismissUpdate,
+            )
         }
 
         val online = connectionState == ConnectionState.CONNECTED
@@ -192,6 +224,8 @@ private fun LightyApp(viewModel: MainViewModel = viewModel()) {
                         showSettings = false
                         viewModel.unbind()
                     },
+                    checkingUpdate = checkingUpdate,
+                    onCheckUpdates = { viewModel.checkForUpdates(silent = false) },
                 )
 
                 Screen.SCAN -> ScanScreen(

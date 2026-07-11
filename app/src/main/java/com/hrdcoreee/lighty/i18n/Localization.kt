@@ -75,6 +75,18 @@ data class Strings(
     val themeLight: String,
     val themeDark: String,
     val themeAmoled: String,
+    // Updates
+    val updatesSection: String,
+    val updateAvailable: String,
+    val updateVersion: (String) -> String,
+    val whatsNew: String,
+    val updateNow: String,
+    val later: String,
+    val downloadingUpdate: String,
+    val checkUpdates: String,
+    val upToDate: String,
+    val updateCheckFailed: String,
+    val downloadFailed: String,
 )
 
 val EnStrings = Strings(
@@ -126,6 +138,17 @@ val EnStrings = Strings(
     themeLight = "Light",
     themeDark = "Dark",
     themeAmoled = "Full AMOLED",
+    updatesSection = "Updates",
+    updateAvailable = "Update available",
+    updateVersion = { version -> "Version $version is available" },
+    whatsNew = "What's new",
+    updateNow = "Update",
+    later = "Later",
+    downloadingUpdate = "Downloading…",
+    checkUpdates = "Check for updates",
+    upToDate = "You have the latest version",
+    updateCheckFailed = "Couldn't check for updates",
+    downloadFailed = "Couldn't download the update",
 )
 
 val RuStrings = Strings(
@@ -177,6 +200,17 @@ val RuStrings = Strings(
     themeLight = "Светлая",
     themeDark = "Тёмная",
     themeAmoled = "Full AMOLED",
+    updatesSection = "Обновления",
+    updateAvailable = "Доступно обновление",
+    updateVersion = { version -> "Доступна версия $version" },
+    whatsNew = "Что нового",
+    updateNow = "Обновить",
+    later = "Позже",
+    downloadingUpdate = "Загрузка…",
+    checkUpdates = "Проверить обновления",
+    upToDate = "У вас последняя версия",
+    updateCheckFailed = "Не удалось проверить обновления",
+    downloadFailed = "Не удалось загрузить обновление",
 )
 
 fun stringsFor(language: Language): Strings = when (language) {
